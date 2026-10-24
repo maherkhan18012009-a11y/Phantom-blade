@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHANTOM // ENTER THE VOID</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Syne:wght@600;800&family=JetBrains+Mono:wght@300&display=swap" rel="stylesheet">
+<script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script type="importmap">
+{"imports": {"three": "https://unpkg.com/three@0.160.0/build/three.module.js"}}
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--red:#ff0033}
+body{background:#000;color:#fff;font-family:\'Space Grotesk\',sans-serif;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--red)}
+nav{position:fixed;top:0;width:100%;z-index:100;padding:22px 30px;display:flex;justify-content:space-between;align-items:center;mix-blend-mode:difference}
+.nav-logo{font-family:\'Syne\',sans-serif;font-weight:800;letter-spacing:0.3em;font-size:13px}
+.nav-links{display:flex;gap:24px;font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:0.2em}
+.nav-links a{color:#fff;text-decoration:none;opacity:0.6}
+#canvas{position:fixed;inset:0;z-index:-1}
+section{min-height:100vh;position:relative;display:flex;align-items:center;padding:0 8vw}
+.hero{flex-direction:column;justify-content:center;align-items:flex-start}
+.hero h1{font-family:\'Syne\',sans-serif;font-weight:800;font-size:clamp(3.5rem,11vw,10rem);line-height:0.85;letter-spacing:-0.04em}
+.hero h1 .outline{-webkit-text-stroke:1px #fff;color:transparent}
+.hero h1 .red{color:var(--red);text-shadow:0 0 40px rgba(255,0,51,0.6)}
+.hero p{max-width:480px;margin-top:25px;color:#999;font-weight:300;line-height:1.8;border-left:1px solid var(--red);padding-left:20px}
+.cta{margin-top:35px;display:flex;gap:15px;flex-wrap:wrap}
+.btn{padding:16px 30px;font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;border:1px solid #fff;background:transparent;color:#fff}
+.btn-primary{background:#fff;color:#000}
+.btn:hover{background:var(--red);border-color:var(--red);color:#fff}
+.section-title{font-family:\'Syne\',sans-serif;font-size:clamp(2.5rem,6vw,5rem);font-weight:800;line-height:0.9}
+.section-num{font-family:\'JetBrains Mono\',monospace;color:var(--red);font-size:11px;letter-spacing:0.4em;margin-bottom:15px;display:block}
+.chambers{padding:100px 8vw}
+.chamber-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:50px;width:100%}
+.chamber{aspect-ratio:0.9;border:1px solid #222;background:rgba(255,255,255,0.02);position:relative;overflow:hidden;cursor:pointer}
+.chamber img{width:100%;height:100%;object-fit:cover;opacity:0.5;filter:grayscale(1);transition:0.6s}
+.chamber:hover img{opacity:0.9;filter:grayscale(0);transform:scale(1.05)}
+.chamber:hover{border-color:var(--red)}
+.chamber-info{position:absolute;bottom:0;left:0;right:0;padding:18px;background:linear-gradient(transparent,rgba(0,0,0,0.9))}
+.chamber-info h3{font-family:\'Syne\',sans-serif;font-size:13px;letter-spacing:0.1em}
+.chamber-info p{font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#888;margin-top:4px}
+.signal{display:grid;grid-template-columns:1.1fr 0.9fr;gap:50px;align-items:center}
+.terminal{border:1px solid #1a1a1a;background:#050505;padding:22px;font-family:\'JetBrains Mono\',monospace;font-size:11px;line-height:1.8;color:#aaa}
+.terminal span{color:var(--red)}
+#whisper{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:50;font-family:\'JetBrains Mono\',monospace;font-size:11px;letter-spacing:0.3em;color:var(--red);opacity:0;text-align:center;transition:0.8s}
+#overlay{position:fixed;inset:0;z-index:200;background:#000;display:none;overflow-y:auto;padding:60px 8vw}
+#overlay.active{display:block}
+.overlay-close{position:fixed;top:25px;right:30px;border:1px solid #333;padding:10px 18px;font-family:\'JetBrains Mono\',monospace;font-size:11px;cursor:pointer;background:#000}
+footer{padding:50px 8vw;border-top:1px solid #111;display:flex;justify-content:space-between;flex-wrap:wrap;gap:15px;font-family:\'JetBrains Mono\',monospace;font-size:10px;letter-spacing:0.2em;color:#444}
+@media(max-width:900px){.chamber-grid{grid-template-columns:1fr}.signal{grid-template-columns:1fr}.nav-links{display:none}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">PHANTOM — 0.13</div>
+  <div class="nav-links">
+    <a href="#void">VOID</a>
+    <a href="#chambers">CHAMBERS</a>
+    <a href="#signal">SIGNAL</a>
+    <a href="#" onclick="triggerWhisper();return false" style="color:var(--red)">● LIVE</a>
+  </div>
+</nav>
+
+<canvas id="canvas"></canvas>
+<div id="whisper"></div>
+
+<section class="hero" id="void">
+  <div class="section-num">EST. 2024 — BLACK VOID PROTOCOL</div>
+  <h1>PHAN<span class="outline">TOM</span><br><span class="red">VOID</span></h1>
+  <p>You were not supposed to find this place. This is a forgotten layer of the network. Chrome drifts in zero gravity. Red light breathes.</p>
+  <div class="cta">
+    <button class="btn btn-primary" onclick="document.getElementById(\'chambers\').scrollIntoView({behavior:\'smooth\'})">ENTER DIMENSION →</button>
+    <button class="btn" onclick="triggerGlitch()">DECRYPT SIGNAL</button>
+  </div>
+</section>
+
+<section class="chambers" id="chambers">
+  <div style="width:100%">
+    <span class="section-num">03 HIDDEN ROOMS DETECTED</span>
+    <h2 class="section-title">THERE ARE<br><span style="color:var(--red)">CHAMBERS</span> WITHIN.</h2>
+    <div class="chamber-grid">
+      <div class="chamber" onclick="openRoom(1)"><img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=600&q=80"><div class="chamber-info"><h3>CHAMBER 01 // ECHO</h3><p>01:13:07 — REPEATING SIGNAL</p></div></div>
+      <div class="chamber" onclick="openRoom(2)"><img src="https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=600&q=80"><div class="chamber-info"><h3>CHAMBER 02 // MIRROR</h3><p>YOU ARE BEING OBSERVED</p></div></div>
+      <div class="chamber" onclick="openRoom(3)"><img src="https://images.unsplash.com/photo-1451187580459-43490279c429?w=600&q=80"><div class="chamber-info"><h3>CHAMBER 03 // ORIGIN</h3><p>DO NOT LOOK BACK</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="signal" id="signal">
+  <div>
+    <span class="section-num">INCOMING TRANSMISSION</span>
+    <h2 class="section-title">THE VOID<br>IS <span style="-webkit-text-stroke:1px #fff;color:transparent">LISTENING</span></h2>
+    <p style="font-family:\'JetBrains Mono\',monospace;color:#777;line-height:2;margin-top:25px;font-size:12px">We left this message in the static for anyone who dives deep enough. The chrome objects are buoys. They mark where reality thins. If you see red light flicker, don\'t run.</p>
+    <button class="btn" style="margin-top:25px" onclick="triggerWhisper()">∿ LISTEN TO WHISPER</button>
+  </div>
+  <div class="terminal">> initializing phantom protocol... <span>OK</span><br>> void depth: 4,127m<br>> entity proximity: <span>NEAR</span><br>> message: "you are not alone in this tab"</div>
+</section>
+
+<footer><div>© PHANTOM VOID — ALL RIGHTS REDACTED</div><div style="color:var(--red)">STAY IN THE RED LIGHT</div></footer>
+
+<div id="overlay"><div class="overlay-close" onclick="closeRoom()">[ CLOSE × ]</div><div id="overlay-content" style="max-width:800px;margin:80px auto"></div></div>
+
+<script>
+const messages=["DON\'T TURN AROUND.","IT KNOWS YOU\'RE HERE.","THE RED LIGHT IS NOT FOR YOU.","YOU HAVE BEEN HERE BEFORE.","FOLLOW THE CHROME."];
+window.triggerWhisper=()=>{const e=document.getElementById(\'whisper\');e.textContent=messages[Math.floor(Math.random()*messages.length)];e.style.opacity=1;setTimeout(()=>e.style.opacity=0,2000);triggerGlitch()};
+window.triggerGlitch=()=>{document.body.style.filter=\'contrast(1.4) hue-rotate(5deg)\';setTimeout(()=>document.body.style.filter=\'none\',150)};
+const roomData={
+ 1:`<h2 style="font-family:Syne,sans-serif;font-size:3rem">CHAMBER 01 <span style="color:var(--red)">ECHO</span></h2><p style="color:#888;line-height:1.9;margin-top:20px">This room repeats. Every footstep you heard was yours, 13 seconds from now.</p><img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1000&q=80" style="width:100%;margin-top:30px">`,
+ 2:`<h2 style="font-family:Syne,sans-serif;font-size:3rem">CHAMBER 02 <span style="color:var(--red)">MIRROR</span></h2><p style="color:#888;line-height:1.9;margin-top:20px">There is no glass here. Only polished void. You see yourself, but delayed by a breath.</p><img src="https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=1000&q=80" style="width:100%;margin-top:30px">`,
+ 3:`<h2 style="font-family:Syne,sans-serif;font-size:3rem">CHAMBER 03 <span style="color:var(--red)">ORIGIN</span></h2><p style="color:#888;line-height:1.9;margin-top:20px">You\'ve reached the center. Red glow pulses like a heart. Someone left a terminal open: "Do not wake the dimension."</p><img src="https://images.unsplash.com/photo-1451187580459-43490279c429?w=1000&q=80" style="width:100%;margin-top:30px">`
+};
+window.openRoom=(n)=>{document.getElementById(\'overlay-content\').innerHTML=roomData[n];document.getElementById(\'overlay\').classList.add(\'active\');document.body.style.overflow=\'hidden\'};
+window.closeRoom=()=>{document.getElementById(\'overlay\').classList.remove(\'active\');document.body.style.overflow=\'\'};
+</script>
+
+<script type="module">
+import * as THREE from \'three\';
+try{
+const canvas=document.getElementById(\'canvas\');
+const scene=new THREE.Scene(); scene.fog=new THREE.Fog(0x000000,8,22);
+const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,100); camera.position.set(0,0.5,9);
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setSize(innerWidth,innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const redLight=new THREE.PointLight(0xff0033,80,20); redLight.position.set(2,2,2); scene.add(redLight);
+scene.add(new THREE.AmbientLight(0x330011,0.5));
+const chromeMat=new THREE.MeshStandardMaterial({color:0xffffff,metalness:0.95,roughness:0.08});
+const group=new THREE.Group(); scene.add(group);
+const torusKnot=new THREE.Mesh(new THREE.TorusKnotGeometry(1.3,0.35,180,32),chromeMat); torusKnot.position.set(2.2,0.3,-1); group.add(torusKnot);
+const sphere=new THREE.Mesh(new THREE.SphereGeometry(0.9,64,64),chromeMat); sphere.position.set(-2.5,-0.4,-0.5); group.add(sphere);
+const torus=new THREE.Mesh(new THREE.TorusGeometry(0.7,0.22,32,100),chromeMat); torus.position.set(0,-1.8,0); group.add(torus);
+const pGeo=new THREE.BufferGeometry(); const pPos=new Float32Array(600*3); for(let i=0;i<600*3;i++) pPos[i]=(Math.random()-0.5)*18; pGeo.setAttribute(\'position\',new THREE.BufferAttribute(pPos,3));
+const particles=new THREE.Points(pGeo,new THREE.PointsMaterial({size:0.015,color:0xff0033,transparent:true,opacity:0.6})); scene.add(particles);
+const grid=new THREE.GridHelper(20,20,0x330011,0x111111); grid.position.y=-3; scene.add(grid);
+let mx=0,my=0; addEventListener(\'mousemove\',e=>{mx=(e.clientX/innerWidth-0.5)*2; my=(e.clientY/innerHeight-0.5)*2});
+addEventListener(\'resize\',()=>{camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight)});
+let t=0; (function animate(){requestAnimationFrame(animate); t+=0.008;
+torusKnot.rotation.y+=0.006; torusKnot.position.y=0.3+Math.sin(t*1.2)*0.4;
+sphere.rotation.y-=0.008; torus.rotation.x+=0.01; particles.rotation.y+=0.0006;
+redLight.intensity=80+Math.sin(t*3)*12;
+camera.position.x+=(mx*0.8-camera.position.x)*0.03; camera.lookAt(0,0,0);
+renderer.render(scene,camera);
+})();
+}catch(e){}
+</script>
+</body>
+</html>
